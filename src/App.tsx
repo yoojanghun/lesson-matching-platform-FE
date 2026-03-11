@@ -1,10 +1,5 @@
-import './App.css'
+import MainPage from './pages/MainPage';
 
-function App() {
-
-  return (
-    <h1>안녕</h1>
-  );
+export default function App() {
+  return <MainPage />;
 }
-
-export default App
