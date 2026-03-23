@@ -4,6 +4,28 @@ import { Input } from '../components/ui/input';
 import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
+import api from '../lib/api'
+import { useEffect, useState } from 'react';
+
+interface CategoryResponse {
+  id: number;
+  name: string;
+  displayName: string;
+  icon: string;
+}
+
+interface TutorResponse {
+  tutorId: number;
+  name: string;
+  title: string;
+  averageRating: number;
+  reviewCount: number
+}
+
+interface MainPageData {
+  categoryNames: CategoryResponse[];
+  popularTutors: Record<number, TutorResponse[]>;
+}
 
 // 인기 악기 카테고리
 const categories = [
@@ -88,17 +110,43 @@ const steps = [
 ];
 
 export default function MainPage() {
+  const [mainPageData, setMainPageData] = useState<MainPageData>({ categoryNames: [], popularTutors: {} });
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.get("/pages/home")
+      .then(response => {
+        setMainPageData(response.data)
+        if (response.data.categoryNames.length > 0) {
+          setSelectedCategoryId(response.data.categoryNames[0].id);
+        }
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error("데이터 로딩 실패: ", error);
+        setLoading(false);
+      })
+  }, []);
+
+  useEffect(() => {
+    console.log(mainPageData);
+    console.log(selectedCategoryId);
+  }, [mainPageData, selectedCategoryId])
+
+  if (loading) return <div>로딩중... </div>
+  
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* 헤더 */}
-      <header className="border-b sticky top-0 bg-background/90 backdrop-blur z-50">
+      <header className="border-b sticky top-0 bg-white backdrop-blur z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Music className="w-8 h-8 text-primary" />
               <span className="text-2xl font-bold">레슨매치</span>
             </div>
-            <nav className="hidden md:flex items-center gap-6">
+            <nav className="hidden md:flex items-center gap-10">
               <a href="#" className="text-muted-foreground hover:text-primary transition-colors">레슨 찾기</a>
               <a href="#" className="text-muted-foreground hover:text-primary transition-colors">강사 등록</a>
               <a href="#" className="text-muted-foreground hover:text-primary transition-colors">이용 방법</a>
@@ -112,7 +160,7 @@ export default function MainPage() {
       </header>
 
       {/* 히어로 섹션 */}
-      <section className="relative bg-gradient-to-br from-amber-50 to-yellow-100 py-20">
+      <section className="relative bg-linear-to-br from-amber-50 to-yellow-100 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h1 className="text-5xl font-bold mb-4">
@@ -160,12 +208,12 @@ export default function MainPage() {
             인기 악기 카테고리
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {categories.map((category) => (
+            {mainPageData.categoryNames.map((category) => (
               <Card key={category.id} className="hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary">
                 <CardContent className="p-6 text-center">
                   <div className="text-5xl mb-3">{category.icon}</div>
-                  <h3 className="font-semibold text-lg mb-1">{category.name}</h3>
-                  <p className="text-sm text-muted-foreground">{category.count}개 레슨</p>
+                  <h3 className="font-semibold text-lg mb-1">{category.displayName}</h3>
+                  <p className="text-sm text-muted-foreground">X개 레슨</p>
                 </CardContent>
               </Card>
             ))}
@@ -247,7 +295,7 @@ export default function MainPage() {
       </section>
 
       {/* CTA 섹션 */}
-      <section className="py-20 bg-gradient-to-br from-amber-500 to-yellow-600 text-white">
+      <section className="py-20 bg-linear-to-br from-amber-500 to-yellow-600 text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl font-bold mb-4">
             강사이신가요?
